@@ -1,0 +1,66 @@
+# =========================
+# Python cache / compiled
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Virtual environments
+# =========================
+.venv/
+venv/
+env/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs (app + gunicorn)
+# =========================
+*.log
+logs/
+gunicorn.log
+
+# =========================
+# Redis
+# =========================
+dump.rdb
+
+# =========================
+# Database (local dev only)
+# =========================
+*.db
+*.sqlite3
+
+# =========================
+# Testing / coverage
+# =========================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# =========================
+# Type check / lint cache
+# =========================
+.mypy_cache/
+.ruff_cache/
+.pyre/
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+.DS_Store
+
+# =========================
+# Temporary / system files
+# =========================
+*.swp
+*.tmp
+*.bak
