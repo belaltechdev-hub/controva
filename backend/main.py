@@ -754,3 +754,5 @@ async def reset_usage(
     redis_client.delete(f"usage_counter:{client_id}")
 
     return {"success": True, "message": "Usage reset"}
+
+# ENDING SERVER CODE
