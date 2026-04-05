@@ -6,6 +6,18 @@ from models import User, Client
 from auth import verify_token
 
 
+def _access_token_from_request(request: Request) -> str | None:
+    token = request.cookies.get("access_token")
+    if token:
+        return token
+    auth = request.headers.get("Authorization") or request.headers.get(
+        "authorization"
+    )
+    if auth and auth.lower().startswith("bearer "):
+        return auth[7:].strip() or None
+    return None
+
+
 # ======================================
 # GET CURRENT USER
 # ======================================
@@ -15,7 +27,7 @@ def get_current_user(
     db: Session = Depends(get_db)
 ):
 
-    token = request.cookies.get("access_token")
+    token = _access_token_from_request(request)
 
     if not token:
         raise HTTPException(
@@ -29,6 +41,12 @@ def get_current_user(
         raise HTTPException(
             status_code=401,
             detail="Invalid token"
+        )
+
+    if payload.get("role") != "owner":
+        raise HTTPException(
+            status_code=401,
+            detail="Not an owner token"
         )
 
     user = db.query(User).filter(User.id == payload.get("user_id")).first()
@@ -80,6 +98,12 @@ def get_current_client(
         raise HTTPException(
             status_code=401,
             detail="Invalid token"
+        )
+
+    if payload.get("role") != "client":
+        raise HTTPException(
+            status_code=401,
+            detail="Not a client token"
         )
 
     client = db.query(Client).filter(

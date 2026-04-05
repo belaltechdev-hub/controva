@@ -1,5 +1,13 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Fix passlib + bcrypt 4.x compatibility
+# passlib 1.7.4 expects bcrypt.__about__.__version__ which was removed in bcrypt 4.x
+import bcrypt as _bcrypt
+if not hasattr(_bcrypt, '__about__'):
+    class _About:
+        __version__ = _bcrypt.__version__
+    _bcrypt.__about__ = _About
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -24,7 +32,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
-    deprecated="auto"
+    deprecated="auto",
+    bcrypt__rounds=12,
 )
 
 
@@ -32,14 +41,21 @@ pwd_context = CryptContext(
 # PASSWORD HASHING FUNCTIONS
 # =====================================
 
+def _truncate_password(password: str) -> bytes:
+    """Truncate password to 72 bytes (bcrypt limit) safely."""
+    return password.encode("utf-8")[:72]
+
 def hash_password(password: str) -> str:
-    password = password[:72]   # bcrypt max limit fix
-    return pwd_context.hash(password)
+    pwd_bytes = _truncate_password(password)
+    salt = _bcrypt.gensalt()
+    hashed = _bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    plain_password = plain_password[:72]   # same limit apply
-    return pwd_context.verify(plain_password, hashed_password)
+    pwd_bytes = _truncate_password(plain_password)
+    hashed_bytes = hashed_password.encode("utf-8")
+    return _bcrypt.checkpw(pwd_bytes, hashed_bytes)
 
 
 # =====================================
@@ -50,7 +66,7 @@ def create_access_token(data: dict) -> str:
 
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + timedelta(
+    expire = datetime.now(timezone.utc) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
 

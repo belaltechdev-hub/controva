@@ -1,8 +1,13 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from database import Base
+
+
+def _utc_now():
+    """Timezone-aware UTC timestamp factory for column defaults."""
+    return datetime.now(timezone.utc)
 
 
 # ====================================
@@ -22,10 +27,10 @@ class User(Base):
 
     role = Column(String, nullable=False)  # owner OR client
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
     # OWNER -> CLIENT RELATION
-    clients = relationship("Client", back_populates="owner")
+    clients = relationship("Client", back_populates="owner", cascade="all, delete-orphan")
 
 
 # ====================================
@@ -52,11 +57,11 @@ class Client(Base):
     usage_limit = Column(Integer)
     validity_days = Column(Integer)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
     # RELATIONSHIPS
     owner = relationship("User", back_populates="clients")
-    usage = relationship("Usage", back_populates="client", uselist=False)
+    usage = relationship("Usage", back_populates="client", uselist=False, cascade="all, delete-orphan")
 
 
 # ====================================
@@ -72,7 +77,7 @@ class Usage(Base):
 
     count = Column(Integer, default=0)
 
-    start_date = Column(DateTime, default=datetime.utcnow)
+    start_date = Column(DateTime, default=_utc_now)
 
     # CLIENT RELATION
     client = relationship("Client", back_populates="usage")

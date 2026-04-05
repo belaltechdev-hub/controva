@@ -1,11 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
-class ClientListResponse(BaseModel):
-    success: bool
-    message: Optional[str] = None
-    data: List[ClientResponse]
-
 
 # =====================================
 # USER SIGNUP
@@ -81,7 +76,6 @@ class ClientResponse(BaseModel):
     usage_limit: int
     validity_days: int
 
-    # 🔥 ADD THESE (important)
     used: int
     remaining_usage: int
     usage_percent: float
@@ -90,3 +84,13 @@ class ClientResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# =====================================
+# CLIENT LIST RESPONSE
+# =====================================
+
+class ClientListResponse(BaseModel):
+    success: bool
+    message: Optional[str] = None
+    data: List[ClientResponse]

@@ -1,5 +1,4 @@
 import time
-import asyncio
 from redis_client import redis_client
 
 # ======================================

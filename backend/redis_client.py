@@ -36,5 +36,6 @@ try:
     redis_client.ping()
     print("Redis connected successfully")
 except redis.exceptions.ConnectionError as e:
-    raise RuntimeError(f"Redis connection failed: {e}")
+    print(f"WARNING: Redis connection failed on import: {e}")
+    print("Redis features will fail until connection is restored.")
 
