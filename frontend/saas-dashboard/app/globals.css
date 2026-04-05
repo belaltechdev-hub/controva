@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+body {
+  background-color: #f9fafb;
+  color: #111827;
+  font-family: sans-serif;
+}
+
+/* 🔥 BREATH GLOW ANIMATION */
+
+/* 🔥 PERFECT CIRCLE GLOW (NO SQUARE) */
+
+@keyframes strokeGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+}
+
+.circle-glow {
+  animation: strokeGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes glowBreath {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.glow-breath {
+  animation: glowBreath 3s ease-in-out infinite;
+}
