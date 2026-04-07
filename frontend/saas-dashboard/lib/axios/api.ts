@@ -18,7 +18,7 @@ const API_URL =
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  timeout: 10000,
+  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -38,6 +38,7 @@ api.interceptors.request.use(
     // #region agent log
     if (typeof window !== "undefined") {
       const hasLsToken = !!window.localStorage.getItem("token");
+    if (process.env.NODE_ENV === "development")
       fetch("http://127.0.0.1:7292/ingest/08f45cac-2965-454a-94ff-318d3cabf17b", {
         method: "POST",
         headers: {
@@ -140,6 +141,7 @@ api.interceptors.response.use(
     return Promise.reject({
       message,
       status,
+      url: error.config?.url,
     });
 
   }
