@@ -153,9 +153,6 @@ Base.metadata.create_all(bind=engine)
 def logout(response: Response):
     response.delete_cookie(
         key="access_token",
-        httponly=True,
-        secure=IS_PROD,
-        samesite="none" if IS_PROD else "lax",
         path="/"
     )
     return success_response(message="Logged out successfully")
@@ -217,8 +214,8 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         key="access_token",
         value=token,
         httponly=True,
-        secure=IS_PROD,
-        samesite="none" if IS_PROD else "lax",
+        secure=True,
+        samesite="none",
         max_age=86400,
         path="/"
     )
@@ -267,8 +264,8 @@ async def client_login(client: ClientLogin, response: Response, db: Session = De
         key="access_token",
         value=token,
         httponly=True,
-        secure=IS_PROD,
-        samesite="none" if IS_PROD else "lax",
+        secure=True,
+        samesite="none",
         max_age=86400,
         path="/"
     )
