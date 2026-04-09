@@ -35,25 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = useCallback(async () => {
   // #region agent log
-  if (typeof window !== "undefined") {
-    fetch("http://127.0.0.1:7292/ingest/08f45cac-2965-454a-94ff-318d3cabf17b", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "fc92fa",
-      },
-      body: JSON.stringify({
-        sessionId: "fc92fa",
-        runId: "pre-fix",
-        hypothesisId: "H2",
-        location: "auth.context.tsx:checkAuth:start",
-        message: "checkAuth_started",
-        data: { hasLsToken: !!window.localStorage.getItem("token") },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
+  if (typeof window !== "undefined") 
   try {
     // 🔥 OWNER CHECK
     await api.get("/owner-only");

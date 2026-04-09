@@ -122,6 +122,7 @@ origins = [
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
+    "https://controva.vercel.app",  # 🔥 CRITICAL FIX
 ]
 
 # Dynamically include FRONTEND_URL from env (for production)
