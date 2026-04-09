@@ -56,17 +56,14 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // call backend (sets HttpOnly cookie)
+    // sync frontend state (login() internally verifies via /owner-only)
     await ownerLogin({
   email: email.trim(),
   password: password.trim(),
 });
 
-    // sync frontend state (login() internally verifies via /owner-only)
-    await login("owner");
-
-    // redirect
-    router.replace("/crm");
+// directly redirect
+router.replace("/crm");
 
   } catch (err: any) {
 
