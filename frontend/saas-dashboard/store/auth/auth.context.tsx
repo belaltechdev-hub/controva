@@ -17,7 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   role: UserRole;
   loading: boolean;
-  login: (role: "owner" | "client") => Promise<void>; 
+  login: (role: "owner" | "client") => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -34,141 +34,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // =====================================
 
   const checkAuth = useCallback(async () => {
-  // #region agent log
-  if (typeof window !== "undefined") 
-  try {
-    // 🔥 OWNER CHECK
-    await api.get("/owner-only");
-
-    setIsAuthenticated(true);
-    setRole("owner");
-    // #region agent log
-    if (typeof window !== "undefined") {
-      fetch("http://127.0.0.1:7292/ingest/08f45cac-2965-454a-94ff-318d3cabf17b", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "fc92fa",
-        },
-        body: JSON.stringify({
-          sessionId: "fc92fa",
-          runId: "pre-fix",
-          hypothesisId: "H2",
-          location: "auth.context.tsx:checkAuth",
-          message: "checkAuth_result",
-          data: { result: "owner_ok" },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
+    if (typeof window === "undefined") {
+      setLoading(false);
+      return;
     }
-    // #endregion
-    return;
 
-  } catch {
-    // #region agent log
-    if (typeof window !== "undefined") {
-      fetch("http://127.0.0.1:7292/ingest/08f45cac-2965-454a-94ff-318d3cabf17b", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "fc92fa",
-        },
-        body: JSON.stringify({
-          sessionId: "fc92fa",
-          runId: "pre-fix",
-          hypothesisId: "H2",
-          location: "auth.context.tsx:checkAuth",
-          message: "owner_probe_failed_trying_client",
-          data: {},
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-    }
-    // #endregion
     try {
-      // 🔥 CLIENT CHECK
-      await api.get("/client-only");
-
+      // 🔥 OWNER CHECK
+      await api.get("/owner-only");
       setIsAuthenticated(true);
-      setRole("client");
-      // #region agent log
-      if (typeof window !== "undefined") {
-        fetch("http://127.0.0.1:7292/ingest/08f45cac-2965-454a-94ff-318d3cabf17b", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "fc92fa",
-          },
-          body: JSON.stringify({
-            sessionId: "fc92fa",
-            runId: "pre-fix",
-            hypothesisId: "H2",
-            location: "auth.context.tsx:checkAuth",
-            message: "checkAuth_result",
-            data: { result: "client_ok" },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-      }
-      // #endregion
+      setRole("owner");
       return;
 
     } catch {
-      // ❌ NOT AUTHENTICATED
-      setIsAuthenticated(false);
-      setRole(null);
-      // #region agent log
-      if (typeof window !== "undefined") {
-        fetch("http://127.0.0.1:7292/ingest/08f45cac-2965-454a-94ff-318d3cabf17b", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "fc92fa",
-          },
-          body: JSON.stringify({
-            sessionId: "fc92fa",
-            runId: "pre-fix",
-            hypothesisId: "H2",
-            location: "auth.context.tsx:checkAuth",
-            message: "checkAuth_result",
-            data: { result: "none" },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-      }
-      // #endregion
-    }
-  } finally {
-    setLoading(false);
-  }
-}, []);
+      try {
+        // 🔥 CLIENT CHECK
+        await api.get("/client-only");
+        setIsAuthenticated(true);
+        setRole("client");
+        return;
 
-useEffect(() => {
-  checkAuth();
-}, [checkAuth]);
+      } catch {
+        // ❌ NOT AUTHENTICATED
+        setIsAuthenticated(false);
+        setRole(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   // =====================================
   // LOGIN
   // =====================================
 
   const login = useCallback(async (role: "owner" | "client") => {
 
-  try {
-    if (role === "client") {
-      await api.get("/client-only");
-      setRole("client");
-    } else {
-      await api.get("/owner-only");
-      setRole("owner");
+    try {
+      if (role === "client") {
+        await api.get("/client-only");
+        setRole("client");
+      } else {
+        await api.get("/owner-only");
+        setRole("owner");
+      }
+
+      setIsAuthenticated(true);
+
+    } catch {
+      setIsAuthenticated(false);
+      setRole(null);
+      // Re-throw so the calling login page can catch it and show an error
+      throw new Error("Auth verification failed after login");
     }
 
-    setIsAuthenticated(true);
-
-  } catch {
-    setIsAuthenticated(false);
-    setRole(null);
-  }
-
-}, []);
+  }, []);
 
   // =====================================
   // LOGOUT

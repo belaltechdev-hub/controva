@@ -56,14 +56,18 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // sync frontend state (login() internally verifies via /owner-only)
+    // 1. Hit /login → backend sets HttpOnly cookie
     await ownerLogin({
-  email: email.trim(),
-  password: password.trim(),
-});
+      email: email.trim(),
+      password: password.trim(),
+    });
 
-// directly redirect
-router.replace("/crm");
+    // 2. Verify cookie + update AuthContext state BEFORE navigating
+    //    (login() calls GET /owner-only with the fresh cookie)
+    await login("owner");
+
+    // 3. Now isAuthenticated=true — safe to navigate
+    router.replace("/crm");
 
   } catch (err: any) {
 
