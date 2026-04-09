@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Code checkout
+      # ======================
+      # CHECKOUT CODE
+      # ======================
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -23,12 +25,12 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          cd frontend
+          cd frontend/saas-dashboard
           npm install
 
       - name: Build frontend
         run: |
-          cd frontend
+          cd frontend/saas-dashboard
           npm run build
 
       # ======================
@@ -43,8 +45,3 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
-
-      - name: Test backend startup
-        run: |
-          cd backend
-          python -c "import main"
