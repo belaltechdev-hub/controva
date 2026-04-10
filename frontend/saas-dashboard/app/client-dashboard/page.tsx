@@ -13,9 +13,12 @@ export default function ClientDashboardPage() {
   const handleLogout = async () => {
     try {
       await api.post("/logout");
-      window.location.href = "/client-login"; // redirect after logout
     } catch (err) {
-      console.error("Logout failed");
+      console.error("Logout API error (non-critical):", err);
+    } finally {
+      // Always clear token and redirect, even if API call fails
+      localStorage.removeItem("token");
+      window.location.href = "/client-login";
     }
   };
 

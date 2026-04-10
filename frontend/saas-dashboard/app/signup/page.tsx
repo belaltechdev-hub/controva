@@ -41,10 +41,15 @@ export default function SignupPage() {
     try {
       setLoading(true);
 
-      await apiPost("/signup", form);
+      const res: any = await apiPost("/signup", form);
 
-      // redirect after success
-      router.replace("/login");
+      // Store token if returned (auto-login after signup)
+      if (res?.access_token) {
+        localStorage.setItem("token", res.access_token);
+      }
+
+      // redirect after success (user is auto-logged in)
+      router.replace("/crm");
 
     } catch (err: any) {
       setError(err?.message || "Signup failed");

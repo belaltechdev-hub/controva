@@ -56,15 +56,17 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // 1. Hit /login → backend sets HttpOnly cookie
-    await ownerLogin({
+    // 1. Hit /login → get JWT token in response
+    const res: any = await ownerLogin({
       email: email.trim(),
       password: password.trim(),
     });
 
-    // 2. Verify cookie + update AuthContext state BEFORE navigating
-    //    (login() calls GET /owner-only with the fresh cookie)
-    await login("owner");
+    const token = res?.access_token;
+    if (!token) throw new Error("No token received from server");
+
+    // 2. Store token + verify via AuthContext
+    await login("owner", token);
 
     // 3. Now isAuthenticated=true — safe to navigate
     router.replace("/crm");

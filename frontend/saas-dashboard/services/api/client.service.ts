@@ -11,6 +11,15 @@ interface ApiResponse<T> {
 }
 
 // ==============================
+// TOKEN RESPONSE TYPE
+// ==============================
+
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+// ==============================
 // TYPES
 // ==============================
 
@@ -33,7 +42,7 @@ export interface ClientDashboardData {
 export const clientLogin = async (data: {
   email: string;
   password: string;
-}): Promise<ApiResponse<null>> => {
+}): Promise<TokenResponse> => {
   return await api.post("/client/login", data);
 };
 

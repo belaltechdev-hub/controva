@@ -42,12 +42,17 @@ export default function ClientLoginPage() {
       setLoading(true);
       setError(null);
 
-      await clientLogin({
+      // Hit /client/login → get JWT token in response
+      const res: any = await clientLogin({
         email: email.trim(),
         password: password.trim(),
       });
 
-      await login("client");
+      const token = res?.access_token;
+      if (!token) throw new Error("No token received from server");
+
+      // Store token + verify via AuthContext
+      await login("client", token);
 
       router.replace("/client-dashboard");
 

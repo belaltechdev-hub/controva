@@ -17,7 +17,6 @@ const API_URL =
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -33,6 +32,14 @@ api.interceptors.request.use(
 
     if (config.headers) {
       config.headers["X-Request-Time"] = Date.now().toString();
+
+      // Attach JWT from localStorage
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        if (token) {
+          config.headers["Authorization"] = `Bearer ${token}`;
+        }
+      }
     }
 
     return config;
@@ -68,8 +75,11 @@ api.interceptors.response.use(
       error.message ||
       "Something went wrong";
 
-    // 401 — silent (auth system handles it)
+    // 401 — clear token (session expired / invalid)
     if (status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+      }
       return Promise.reject({ message, status });
     }
 

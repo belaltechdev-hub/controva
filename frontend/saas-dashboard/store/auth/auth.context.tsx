@@ -17,8 +17,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   role: UserRole;
   loading: boolean;
-  login: (role: "owner" | "client") => Promise<void>;
-  logout: () => Promise<void>;
+  login: (role: "owner" | "client", token: string) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -39,28 +39,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const token = localStorage.getItem("token");
+
+    // No token → not authenticated (skip API calls)
+    if (!token) {
+      setIsAuthenticated(false);
+      setRole(null);
+      setLoading(false);
+      return;
+    }
+
+    // Quick JWT expiry check (avoid unnecessary API calls)
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem("token");
+        setIsAuthenticated(false);
+        setRole(null);
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // Malformed token — clear and bail
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+      setRole(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       // 🔥 OWNER CHECK
       await api.get("/owner-only");
       setIsAuthenticated(true);
       setRole("owner");
+      setLoading(false);
       return;
 
     } catch {
+      // Owner check failed — but DON'T let the 401 interceptor
+      // wipe the token before we try client check.
+      // Re-set the token in case the interceptor cleared it.
+      const stillHasToken = localStorage.getItem("token");
+      if (!stillHasToken && token) {
+        localStorage.setItem("token", token);
+      }
+
       try {
         // 🔥 CLIENT CHECK
         await api.get("/client-only");
         setIsAuthenticated(true);
         setRole("client");
+        setLoading(false);
         return;
 
       } catch {
-        // ❌ NOT AUTHENTICATED
+        // ❌ Both failed — token is truly invalid
+        localStorage.removeItem("token");
         setIsAuthenticated(false);
         setRole(null);
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -72,10 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // LOGIN
   // =====================================
 
-  const login = useCallback(async (role: "owner" | "client") => {
+  const login = useCallback(async (loginRole: "owner" | "client", token: string) => {
+
+    // Store token in localStorage FIRST
+    localStorage.setItem("token", token);
 
     try {
-      if (role === "client") {
+      if (loginRole === "client") {
         await api.get("/client-only");
         setRole("client");
       } else {
@@ -86,9 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(true);
 
     } catch {
+      // Token is invalid — clean up
+      localStorage.removeItem("token");
       setIsAuthenticated(false);
       setRole(null);
-      // Re-throw so the calling login page can catch it and show an error
       throw new Error("Auth verification failed after login");
     }
 
@@ -98,39 +141,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // LOGOUT
   // =====================================
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(() => {
 
     // capture role before clearing
     const currentRole = role;
 
-    try {
+    // Clear token from localStorage
+    localStorage.removeItem("token");
 
-      await api.post("/logout");
+    setIsAuthenticated(false);
+    setRole(null);
 
-    } catch (error) {
+    if (typeof window !== "undefined") {
 
-      console.error("Logout error:", error);
+      const currentPath = window.location.pathname;
 
-    } finally {
-
-      setIsAuthenticated(false);
-      setRole(null);
-
-      if (typeof window !== "undefined") {
-
-        const currentPath = window.location.pathname;
-
-        // redirect to correct login based on previous role
-        if (currentRole === "client") {
-          if (!currentPath.includes("/client-login")) {
-            window.location.href = "/client-login";
-          }
-        } else {
-          if (!currentPath.includes("/login")) {
-            window.location.href = "/login";
-          }
+      // redirect to correct login based on previous role
+      if (currentRole === "client") {
+        if (!currentPath.includes("/client-login")) {
+          window.location.href = "/client-login";
         }
-
+      } else {
+        if (!currentPath.includes("/login")) {
+          window.location.href = "/login";
+        }
       }
 
     }

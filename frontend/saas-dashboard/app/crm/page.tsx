@@ -8,6 +8,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/axios/api";
 import CreateClientForm from "@/components/forms/create-client-form";
 import EditClientForm from "@/components/forms/edit-client-form";
 import ClientCard from "@/components/cards/client-card";
+import { useAuth } from "@/store/auth/auth.context";
 // =========================
 // TYPES
 // =========================
@@ -34,6 +35,8 @@ interface ApiResponse<T> {
 }
 
 export default function CRMPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +52,7 @@ export default function CRMPage() {
   const fetchClients = useCallback(async (silent = false) => {
     try {
       fetchClientsInvocation.current += 1;
-      // #region agent log
-      // #endregion
+
       if (!silent) {
         setLoading(true);
         setError(null);
@@ -85,16 +87,20 @@ export default function CRMPage() {
   }, []);
 
   // =========================
-  // USE EFFECT (stable)
+  // INITIAL FETCH (wait for auth)
   // ========================= 
   useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) return;
     fetchClients();
-  }, [fetchClients]);
+  }, [fetchClients, authLoading, isAuthenticated]);
 
   // =========================
 // AUTO REFRESH (2s SAFE POLLING)
 // =========================
   useEffect(() => {
+  if (authLoading || !isAuthenticated) return;
+
   let isFetching = false;
 
   const interval = setInterval(async () => {
@@ -111,7 +117,7 @@ export default function CRMPage() {
   }, 2000);
 
   return () => clearInterval(interval);
-}, [fetchClients]);
+}, [fetchClients, authLoading, isAuthenticated]);
   // =========================
   // SEARCH FILTER
   // =========================

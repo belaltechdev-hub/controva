@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getClientDashboard } from "@/services/api/client.service";
+import { useAuth } from "@/store/auth/auth.context";
 
 interface ClientDashboardData {
   company: string;
@@ -15,12 +16,18 @@ interface ClientDashboardData {
 
 export const useClientDashboard = () => {
 
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
   const [data, setData] = useState<ClientDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const isMounted = useRef(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const dataRef = useRef<ClientDashboardData | null>(null);
+
+  // Keep dataRef in sync
+  dataRef.current = data;
 
   // =====================================
   // FETCH DASHBOARD (SMART + SILENT MODE)
@@ -28,75 +35,83 @@ export const useClientDashboard = () => {
 
   const fetchDashboard = useCallback(async (silent = false) => {
 
+    // Don't fetch if not authenticated yet
+    if (typeof window !== "undefined" && !localStorage.getItem("token")) {
+      return;
+    }
+
     try {
-    
-      // #endregion
-      // 🔥 only show loader on first load
+
       if (!silent) {
-  setLoading(true);
-}
+        setLoading(true);
+      }
 
-const res = await getClientDashboard();
+      const res = await getClientDashboard();
 
-if (!res.success) {
-  throw new Error(res.message);
-}
+      if (!res.success) {
+        throw new Error(res.message);
+      }
 
-if (isMounted.current) {
-  // ✅ lightweight comparison (fast + safe)
-  if (
-    !data ||
-    res.data.used !== data.used ||
-    res.data.remaining !== data.remaining ||
-    res.data.expire_in !== data.expire_in
-  ) {
-    setData(res.data);
-  }
+      if (isMounted.current) {
+        const prev = dataRef.current;
 
-  setError(null);
-}
+        // Lightweight comparison — only update state if data changed
+        if (
+          !prev ||
+          res.data.used !== prev.used ||
+          res.data.remaining !== prev.remaining ||
+          res.data.expire_in !== prev.expire_in
+        ) {
+          setData(res.data);
+        }
 
-} catch (err: any) {
-  if (isMounted.current) {
-    setError(err.message || "Something went wrong");
-  }
+        setError(null);
+      }
 
-} finally {
-  if (isMounted.current && !silent) {
-    setLoading(false);
-  }
-}
+    } catch (err: any) {
+      if (isMounted.current) {
+        setError(err.message || "Something went wrong");
+      }
 
-  }, [data]);
+    } finally {
+      if (isMounted.current && !silent) {
+        setLoading(false);
+      }
+    }
+
+  }, []); // ← stable reference (no data dep = no infinite loop)
 
   // =====================================
   // REAL-TIME POLLING
   // =====================================
 
   useEffect(() => {
+    // Wait for auth check to complete before fetching
+    if (authLoading) return;
+    if (!isAuthenticated) return;
+
     isMounted.current = true;
 
-  // 🔥 Initial load
-  fetchDashboard(false);
+    // Initial load
+    fetchDashboard(false);
 
-  // 🔥 Start polling (every 2 sec)
-  intervalRef.current = setInterval(() => {
-    // ✅ Only run if tab is active (pro behavior)
-    if (document.visibilityState === "visible") {
-      fetchDashboard(true); // silent refresh
-    }
-  }, 2000);
+    // Start polling (every 2 sec)
+    intervalRef.current = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchDashboard(true); // silent refresh
+      }
+    }, 2000);
 
-  // 🔥 Cleanup (very important)
-  return () => {
-    isMounted.current = false;
+    // Cleanup
+    return () => {
+      isMounted.current = false;
 
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-  };
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
 
-}, [fetchDashboard]);
+  }, [fetchDashboard, authLoading, isAuthenticated]);
 
   // =====================================
   // MANUAL REFRESH

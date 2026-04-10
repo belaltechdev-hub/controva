@@ -7,9 +7,7 @@ from auth import verify_token
 
 
 def _access_token_from_request(request: Request) -> str | None:
-    token = request.cookies.get("access_token")
-    if token:
-        return token
+    """Extract Bearer token from Authorization header."""
     auth = request.headers.get("Authorization") or request.headers.get(
         "authorization"
     )
@@ -84,7 +82,7 @@ def get_current_client(
     db: Session = Depends(get_db)
 ):
 
-    token = request.cookies.get("access_token")
+    token = _access_token_from_request(request)
 
     if not token:
         raise HTTPException(

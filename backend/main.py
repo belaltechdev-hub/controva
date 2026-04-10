@@ -10,7 +10,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Response, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -151,12 +151,7 @@ Base.metadata.create_all(bind=engine)
 # ===================================#
 
 @app.post("/logout")
-def logout(response: Response):
-    response.delete_cookie(
-        key="access_token",
-        path="/"
-    
-    )
+def logout():
     return success_response(message="Logged out successfully")
 
 
@@ -200,7 +195,7 @@ async def signup(user: UserSignup, db: Session = Depends(get_db)):
 # ================================#
 
 @app.post("/login", response_model=TokenResponse)
-async def login(user: UserLogin, response: Response, db: Session = Depends(get_db)):
+async def login(user: UserLogin, db: Session = Depends(get_db)):
 
     db_user = db.query(User).filter(User.email == user.email).first()
 
@@ -211,16 +206,6 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         "user_id": db_user.id,
         "role": "owner"
     })
-
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=86400,
-        path="/"
-    )
 
     return {
         "access_token": token,
@@ -247,7 +232,7 @@ def client_route(client=Depends(get_current_client)):
 # =======================================#
 
 @app.post("/client/login", response_model=TokenResponse)
-async def client_login(client: ClientLogin, response: Response, db: Session = Depends(get_db)):
+async def client_login(client: ClientLogin, db: Session = Depends(get_db)):
 
     db_client = db.query(Client).filter(Client.email == client.email).first()
 
@@ -261,16 +246,6 @@ async def client_login(client: ClientLogin, response: Response, db: Session = De
         "client_id": db_client.id,
         "role": "client"
     })
-
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=86400,
-        path="/"
-    )
 
     return {
         "access_token": token,
