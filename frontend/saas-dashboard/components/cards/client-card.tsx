@@ -106,40 +106,44 @@ export default function ClientCard({
       <div className="grid grid-cols-2 gap-3 text-sm">
 
         <div className="bg-white dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-700 shadow-sm rounded-xl p-3">
-          <p className="text-gray-700 dark:text-zinc-300 dark:text-zinc-300 text-xs">Remaining</p>
+          <p className="text-gray-700 dark:text-zinc-300 text-xs">Total Limit</p>
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {client.usage_limit}
+          </p>
+        </div>
+
+        <div className="bg-white dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-700 shadow-sm rounded-xl p-3">
+          <p className="text-gray-700 dark:text-zinc-300 text-xs">Remaining</p>
           <p className="font-semibold text-gray-900 dark:text-white">
             {client.remaining_usage ?? 0}
           </p>
         </div>
 
         <div className="bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-xl p-3">
-          <p className="text-gray-700 dark:text-zinc-300 dark:text-zinc-300 text-xs">Plan</p>
+          <p className="text-gray-700 dark:text-zinc-300 text-xs">Plan</p>
           <p className="font-semibold text-gray-900 dark:text-white">
             {client.validity_days} days
           </p>
         </div>
 
-        <div className="bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-xl p-3 col-span-2">
-  <p className="text-gray-700 dark:text-zinc-300 text-xs">
-    Expires In
-  </p>
-
-  <p
-    className={`font-bold ${
-      (client.expire_in ?? 0) <= 0
-        ? "text-red-500"
-        : (client.expire_in ?? 0) <= 3
-        ? "text-red-400"
-        : (client.expire_in ?? 0) <= 7
-        ? "text-yellow-500"
-        : "text-green-500"
-    }`}
-  >
-    {(client.expire_in ?? 0) <= 0
-      ? "Expired"
-      : `${client.expire_in} ${client.expire_unit ?? "days"}`}
-  </p>
-</div>
+        <div className="bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-xl p-3">
+          <p className="text-gray-700 dark:text-zinc-300 text-xs">Expires In</p>
+          <p
+            className={`font-bold ${
+              (client.expire_in ?? 0) <= 0
+                ? "text-red-500"
+                : (client.expire_in ?? 0) <= 3
+                ? "text-red-400"
+                : (client.expire_in ?? 0) <= 7
+                ? "text-yellow-500"
+                : "text-green-500"
+            }`}
+          >
+            {(client.expire_in ?? 0) <= 0
+              ? "Expired"
+              : `${client.expire_in} ${client.expire_unit ?? "days"}`}
+          </p>
+        </div>
 
       </div>
 
