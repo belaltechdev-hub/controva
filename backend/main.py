@@ -154,8 +154,8 @@ Base.metadata.create_all(bind=engine)
 def logout(response: Response):
     response.delete_cookie(
         key="access_token",
-        path="/",
-        domain="controva.onrender.com"
+        path="/"
+    
     )
     return success_response(message="Logged out successfully")
 
@@ -219,8 +219,7 @@ async def login(user: UserLogin, response: Response, db: Session = Depends(get_d
         secure=True,
         samesite="none",
         max_age=86400,
-        path="/",
-        domain="controva.onrender.com"
+        path="/"
     )
 
     return {
@@ -270,8 +269,7 @@ async def client_login(client: ClientLogin, response: Response, db: Session = De
         secure=True,
         samesite="none",
         max_age=86400,
-        path="/",
-        domain="controva.onrender.com"
+        path="/"
     )
 
     return {
