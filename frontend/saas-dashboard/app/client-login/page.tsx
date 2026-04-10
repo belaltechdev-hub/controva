@@ -54,7 +54,7 @@ export default function ClientLoginPage() {
       // Store token + verify via AuthContext
       await login("client", token);
 
-      router.replace("/client-dashboard");
+      window.location.href = "/client-dashboard";
 
     } catch (err: any) {
       console.error("Client login failed:", err);

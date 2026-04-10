@@ -49,7 +49,7 @@ export default function SignupPage() {
       }
 
       // redirect after success (user is auto-logged in)
-      router.replace("/crm");
+      window.location.href = "/crm";
 
     } catch (err: any) {
       setError(err?.message || "Signup failed");

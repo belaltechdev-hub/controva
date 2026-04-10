@@ -69,7 +69,7 @@ export default function LoginPage() {
     await login("owner", token);
 
     // 3. Now isAuthenticated=true — safe to navigate
-    router.replace("/crm");
+    window.location.href = "/crm";
 
   } catch (err: any) {
 
