@@ -85,6 +85,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 # ==========================================#
 # ==== EXCEPTION HANDLERS =================#
